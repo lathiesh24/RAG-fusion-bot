@@ -18,56 +18,29 @@ if thirdai_license_key:
 # Initialize NeuralDB
 db = ndb.NeuralDB()
 
-# Function to insert insurance-related documents into NeuralDB
 def insert_documents():
     insertable_docs = []
-    pdf_files = [
-   "E:\lang and llama\insurance bot\Policies.pdf",
-    "E:\\lang and llama\\insurance bot\\accidental-death-benefit-rider-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\cash-back-plan-brochuree.pdf",
-    "E:\\lang and llama\\insurance bot\\data.pdf",
-    "E:\\lang and llama\\insurance bot\\gold-brochure (1).pdf",
-    "E:\\lang and llama\\insurance bot\\gold-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\guaranteed-protection-plus-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\ilovepdf_merged.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-csc-shubhlabh-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-elite-term-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-guaranteed-benefit-plan-brochure1 (1).pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-guaranteed-benefit-plan-brochure1.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-insurance-khata-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-little-champ-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-long-guaranteed-income-plan-brochure (1).pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-long-guaranteed-income-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-micro-bachat-plan-brochure (1).pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-radiance-smart-investment-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-saral-bachat-bima-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-saral-jeevan-bima-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-life-smart-pay-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-maha-jeevan-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-money-balance-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-pos-cash-back-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\indiafirst-simple-benefit-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\smart-save-plan-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\tulip-brochure.pdf",
-    "E:\\lang and llama\\insurance bot\\wealth-maximizer-brochure.pdf"
-]
-
-
-    for file in pdf_files:
-        pdf_doc = ndb.PDF(file)
-        insertable_docs.append(pdf_doc)
-
-    checkpoint_config = ndb.CheckpointConfig(
-        checkpoint_dir="C:/data/sample_checkpoint",  # Specify checkpoint directory
-        resume_from_checkpoint=False,
-        checkpoint_interval=3,
-    )
     
-    # Insert and train documents into NeuralDB
-    source_ids = db.insert(insertable_docs, train=True, checkpoint_config=checkpoint_config)
-    return source_ids
+    # Define the folder path where the PDF files are located
+    pdf_folder_path = r''  # Change this to your folder path
 
+    # List all PDF files in the folder
+    pdf_files = [os.path.join(pdf_folder_path, file) for file in os.listdir(pdf_folder_path) if file.endswith('.pdf')]
+
+    # Iterate through the files and upload them to NeuralDB
+    for file in pdf_files:
+        try:
+            doc = ndb.PDF(file)  # Load each PDF file into NeuralDB
+            insertable_docs.append(doc)
+        except Exception as e:
+            print(f"Error processing {file}: {e}")
+
+    # Insert all documents into NeuralDB
+    if insertable_docs:
+        db.insert(insertable_docs, train=False)
+        print(f"Successfully inserted {len(insertable_docs)} documents into NeuralDB.")
+    else:
+        print("No documents to insert.")
 # Function to perform search in NeuralDB
 def search_neural_db(query):
     search_results = db.search(query, top_k=2)
