@@ -1,7 +1,7 @@
 import os
 import random
 from thirdai import licensing, neural_db as ndb
-from openai import OpenAI
+import openai  # Correct way to import OpenAI library
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -10,7 +10,9 @@ load_dotenv()
 # Activate ThirdAI license
 thirdai_license_key = os.getenv("THIRDAI_LICENSE_KEY")
 openai_api_key = os.getenv("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=openai_api_key)
+
+# Set the OpenAI API key
+openai.api_key = openai_api_key
 
 if thirdai_license_key:
     licensing.activate(thirdai_license_key)  # Enter your ThirdAI key here
@@ -18,11 +20,12 @@ if thirdai_license_key:
 # Initialize NeuralDB
 db = ndb.NeuralDB()
 
+# Function to insert insurance-related documents into NeuralDB
 def insert_documents():
     insertable_docs = []
     
     # Define the folder path where the PDF files are located
-    pdf_folder_path = r''  # Change this to your folder path
+    pdf_folder_path = r'E:\\your\\folder\\path'  # Change this to your folder path
 
     # List all PDF files in the folder
     pdf_files = [os.path.join(pdf_folder_path, file) for file in os.listdir(pdf_folder_path) if file.endswith('.pdf')]
@@ -41,6 +44,7 @@ def insert_documents():
         print(f"Successfully inserted {len(insertable_docs)} documents into NeuralDB.")
     else:
         print("No documents to insert.")
+
 # Function to perform search in NeuralDB
 def search_neural_db(query):
     search_results = db.search(query, top_k=2)
@@ -53,14 +57,13 @@ def reciprocal_rank_fusion(search_results_dict, k=60):
         for rank, (doc, score) in enumerate(sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)):
             if doc not in fused_scores:
                 fused_scores[doc] = 0
-            previous_score = fused_scores[doc]
             fused_scores[doc] += 1 / (rank + k)
     reranked_results = {doc: score for doc, score in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)}
     return reranked_results
 
 # Function to generate queries using OpenAI's ChatGPT
 def generate_queries_chatgpt(original_query):
-    response = openai_client.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant that generates multiple search queries based on a single input query."},
@@ -88,7 +91,9 @@ def generate_answers(query, references):
     )
 
     messages = [{"role": "user", "content": prompt}]
-    response = openai_client.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo", messages=messages, temperature=0
     )
     return response.choices[0].message['content']
+
+print("done")
